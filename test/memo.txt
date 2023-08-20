@@ -1,0 +1,3 @@
+・テスト実行コマンド
+
+python3 -m unittest simpletest

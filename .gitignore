@@ -3,3 +3,6 @@ venv/
 
 # Environment [VisualStudioCode]
 .vscode/
+
+# Environment [Program]
+/__pycache__/
