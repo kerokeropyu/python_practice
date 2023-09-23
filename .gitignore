@@ -1,5 +1,6 @@
 # Environment [virtual：venv]
 venv/
+env/
 
 # Environment [VisualStudioCode]
 .vscode/
