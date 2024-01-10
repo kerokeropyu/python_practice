@@ -6,3 +6,4 @@ with open('test.json', 'r', encoding='utf-8') as fp:
 print(data[0]['name'], data[0]['age'])
 print(data[1]['name'], data[1]['age'])
 
+# test
