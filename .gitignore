@@ -7,3 +7,7 @@ env/
 
 # Environment [Program]
 /__pycache__/
+
+log_rotation/output/
+
+*.log
