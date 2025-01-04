@@ -129,7 +129,7 @@ class DatabaseHandler:
     def __init__(self, db_config):
         self.db_config = db_config
 
-    def save_to_database(self, post_details):
+    def save_to_database(self, post_details, prefecture):
         conn = mysql.connector.connect(**self.db_config)
         cursor = conn.cursor()
 
@@ -149,8 +149,10 @@ class DatabaseHandler:
         )
         """)
 
-        # 既存のデータを削除
-        cursor.execute("DELETE FROM jomoty_posts")
+        # 既存のデータを削除するかどうかをフラグで制御
+        sql = "DELETE FROM jomoty_posts WHERE prefecture = %s"
+        pre = (prefecture, )
+        cursor.execute(sql, pre)
 
         # 新しいデータを挿入
         for post in post_details:
@@ -175,13 +177,13 @@ class DatabaseHandler:
         conn.close()
         logging.info(f"{len(post_details)} 件の投稿をデータベースに保存しました")
 
-    def generate_sql_file(self, post_details):
+    def generate_sql_file(self, post_details, prefecture):
         # sqlフォルダが存在しない場合は作成
         if not os.path.exists('sql'):
             os.makedirs('sql')
 
-        output_file = f'sql/update_jomoty_posts_{datetime.now().strftime("%Y%m%d_%H%M%S")}.sql'
-        sql_content = self.generate_sql_string(post_details)
+        output_file = f'sql/update_jomoty_posts_{prefecture}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.sql'
+        sql_content = self.generate_sql_string(post_details, prefecture)
         
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(sql_content)
@@ -189,10 +191,10 @@ class DatabaseHandler:
         logging.info(f"SQL文を {output_file} に出力しました")
         return sql_content
 
-    def generate_sql_string(self, post_details):
+    def generate_sql_string(self, post_details, prefecture):
         sql_lines = []
         # sql_lines.append("START TRANSACTION;")
-        sql_lines.append("DELETE FROM jomoty_posts;")
+        sql_lines.append("DELETE FROM jomoty_posts where {prefecture};")
         sql_lines.append("INSERT INTO jomoty_posts (prefecture, title, gender, url, region, activity_place, created_at, updated_at, scraped_at) VALUES")
 
         value_lines = []
@@ -218,12 +220,12 @@ class DatabaseHandler:
 
         return "\n".join(sql_lines)
 
-    def generate_json_file(self, post_details):
+    def generate_json_file(self, post_details, prefecture):
         # jsonフォルダが存在しない場合は作成
         if not os.path.exists('json'):
             os.makedirs('json')
 
-        output_file = f'json/jomoty_posts_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
+        output_file = f'json/jomoty_posts_{prefecture}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
         
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(post_details, f, ensure_ascii=False, indent=2)
@@ -265,13 +267,13 @@ if __name__ == "__main__":
     logging.info(f"{len(post_details)} 件の投稿の詳細をスクレイピングしました")
 
     # SQLファイルの生成
-    sql = db_handler.generate_sql_file(post_details)
+    sql = db_handler.generate_sql_file(post_details, prefecture)
 
     # JSONファイルの生成
-    db_handler.generate_json_file(post_details)
+    db_handler.generate_json_file(post_details, prefecture)
 
     # データベースに保存
-    db_handler.save_to_database(post_details)
+    db_handler.save_to_database(post_details, prefecture)
 
     end_time = datetime.now()
     logging.info(f"スクレイピング終了: {end_time}")
